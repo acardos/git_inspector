@@ -6,7 +6,7 @@ from git_inspector.reports import get_git_reports
 def inspect_all(paths):
     repos = get_git_repos(paths)
     reports = get_git_reports(repos)
-    return repos, reports
+    return reports
 
 
 def get_git_repos(paths):

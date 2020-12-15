@@ -1,3 +1,4 @@
+import itertools
 from collections import defaultdict
 from git_inspector.config import *
 from git_inspector.reports.git_report import GitReport
@@ -6,54 +7,61 @@ from git_inspector.common import is_master_branch
 from git_inspector.reports import GIT_REPORT_LEVEL_ALERT, GIT_REPORT_LEVEL_WARNING, GIT_REPORT_LEVEL_HINT
 
 
-def format_git_reports(git_reports: list, repos: list):
-    git_reports = sorted(git_reports, key=lambda report: report.alert_level)
-    git_reports_repr = [
-        format_git_report(report)
-        for report in git_reports
-    ] + [
-        summary_string(git_reports, repos)
-    ]
-    git_reports_repr_str = "\n".join(
-        [f for f in git_reports_repr
-         if f != ""]
-    )
-    return git_reports_repr_str
+def format_git_reports(git_reports: list):
+    lines = []
+
+    for report in git_reports:
+        repository = report[0]
+        reports = report[1:]
+        if all(r.is_empty() for r in reports):
+            continue
+        lines.append(git_repo_repr(repository))
+        report_lines = itertools.chain([
+            format_git_report(report)
+            for report in reports
+        ])
+
+        lines.extend(report_lines)
+
+    sm = summary_string(git_reports)
+    lines.append(sm)
+
+    return "\n".join([l for l in lines if l != ""])
+
+
+def color_s(color, string):
+    return f"{color}{string}{COLOR_RESET}"
 
 
 def format_git_report(git_report: GitReport):
     if git_report.is_empty():
         return ""
 
-    indicator_line = f"{COLORS[git_report.alert_level]}{git_report.description}:{COLOR_RESET}"
-    git_repo_repr_str = map(indent_string, map(git_repo_repr, git_report.repos))
-    git_head_repr_str = map(indent_string, map(git_head_repr, git_report.heads))
-
     lines = []
-    lines.extend(git_repo_repr_str)
-    lines.extend(git_head_repr_str)
-    lines = sorted(lines, key=str.casefold)
-    lines = [indicator_line]+lines
-    report_repr_str = "\n".join(lines)
+    for repository in git_report.repos:
+        lines.append(indent_string(color_s(COLORS[git_report.alert_level], git_report.description)))
 
-    return report_repr_str
+    for head in git_report.heads:
+        lines.append(indent_string(color_s(COLORS[git_report.alert_level], git_report.description)))
+
+    return "\n".join(lines)
 
 
 def indent_string(string, indent=5):
     return " " * indent + string
 
 
-def summary_string(git_reports: list, repos: list):
+def summary_string(git_reports: list):
     a_cnt = count_git_report_alert_level(git_reports)
 
     if a_cnt[GIT_REPORT_LEVEL_ALERT] == 0 \
             and a_cnt[GIT_REPORT_LEVEL_WARNING] == 0 \
             and a_cnt[GIT_REPORT_LEVEL_HINT] == 0:
-        summary = f"{len(repos)} git repositories found. Everything looks fine :D"
+        summary = f"{len(git_reports)} git repositories found. Everything looks fine :D"
         summary = COLOR_SUCCESS + summary + COLOR_RESET
         return summary
 
-    summary = f"{SUMMARY_COLOR_NOT_CLEAN}{len(repos)} git repositories found {COLOR_RESET}"
+    summary = f"{SUMMARY_COLOR_NOT_CLEAN}{len(git_reports)} git repositories found {COLOR_RESET}"
 
     sss = []
     if a_cnt[GIT_REPORT_LEVEL_ALERT] > 0:
@@ -74,9 +82,11 @@ def summary_string(git_reports: list, repos: list):
 
 def count_git_report_alert_level(git_reports):
     a_cnt = defaultdict(int)
-    for git_report in git_reports:
-        git_report: GitReport = git_report
-        a_cnt[git_report.alert_level] += len(git_report)
+    for repo_report in git_reports:
+        repository = repo_report[0]
+        reports = repo_report[1:]
+        for report in reports:
+            a_cnt[report.alert_level] += 1
     return a_cnt
 
 
