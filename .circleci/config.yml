@@ -9,6 +9,10 @@ jobs:
     steps:
       - checkout
       - python/install-packages
+      - python/install-packages:
+          args: pytest
+          pkg-manager: pip
+          pypi-cache: false
       - run:
           command: python3 -m pytest
           name: pytest unittests
