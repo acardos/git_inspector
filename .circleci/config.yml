@@ -8,10 +8,11 @@ jobs:
     executor: python/default
     steps:
       - checkout
-      - python/install-packages
       - python/install-packages:
+          pkg-manager: pip
+      - python/install-packages:
+          pkg-manager: pip
           args: pytest
-          pypi-cache: false
       - run:
           command: pytest
           name: pytest unittests
