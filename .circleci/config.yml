@@ -10,9 +10,7 @@ jobs:
       - checkout
       - python/install-packages:
           pkg-manager: pip
-      - python/install-packages:
-          pkg-manager: pip
-          args: pytest
+          args: . pytest
       - run:
           command: pytest
           name: pytest unittests
