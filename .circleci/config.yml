@@ -10,15 +10,17 @@ jobs:
       - checkout
       - python/install-packages:
           pkg-manager: pip
-          args: . pytest
+      - python/install-packages:
+          pip-dependency-file: dev-requirements.txt
+          pkg-manager: pip
+      - python/install-packages:
+          args: pytest
+          pkg-manager: pip
+          pypi-cache: false
       - run:
-          command: pytest
-          name: pytest unittests
-      - run:
-          command: pytest --cov=git_inspector --cov-report xml
-          name: pytest code coverage
-      - store_artifacts:
-          path: coverage.xml
+          command: |
+            pytest --version
+          name: Test
 
 workflows:
   main:
