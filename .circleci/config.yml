@@ -13,10 +13,10 @@ jobs:
           args: pytest
           pypi-cache: false
       - run:
-          command: python3 -m pytest
+          command: pytest
           name: pytest unittests
       - run:
-          command: python3 -m pytest --cov=git_inspector --cov-report xml
+          command: pytest --cov=git_inspector --cov-report xml
           name: pytest code coverage
       - store_artifacts:
           path: coverage.xml
@@ -24,7 +24,4 @@ jobs:
 workflows:
   main:
     jobs:
-      - python/test:
-          args: '--dev'
-          pkg-manager: pipenv
-          test-tool: pytest
+      - build-and-test
