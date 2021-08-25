@@ -12,7 +12,7 @@ jobs:
           command: |
             python -m pip install .
             python -m pip install tox
-            tox
+            python -m tox
           name: Test
 
 workflows:
